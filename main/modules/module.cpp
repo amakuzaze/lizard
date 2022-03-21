@@ -3,6 +3,8 @@
 #include "../utils/uart.h"
 #include "bluetooth.h"
 #include "can.h"
+#include "canopen_node.h"
+#include "canopen_object_dictionary.h"
 #include "driver/gpio.h"
 #include "expander.h"
 #include "input.h"
@@ -67,6 +69,21 @@ Module_ptr Module::create(const std::string type,
         gpio_num_t tx_pin = (gpio_num_t)arguments[1]->evaluate_integer();
         long baud_rate = arguments[2]->evaluate_integer();
         return std::make_shared<Can>(name, rx_pin, tx_pin, baud_rate);
+    } else if (type == "CanOpenNode") {
+        Module::expect(arguments, 2, identifier, integer);
+        std::string can_name = arguments[0]->evaluate_identifier();
+        Module_ptr module = Global::get_module(can_name);
+        if (module->type != can) {
+            throw std::runtime_error("module \"" + can_name + "\" is no can connection");
+        }
+        const Can_ptr can = std::static_pointer_cast<Can>(module);
+        int node_id = arguments[1]->evaluate_integer();
+        CanOpenNode_ptr node = std::make_shared<CanOpenNode>(name, can, node_id);
+        node->subscribe_to_can();
+        return node;
+    } else if (type == "CanOpenObjectDictionary") {
+        Module::expect(arguments, 0);
+        return std::make_shared<CanOpenObjectDictionary>(name);
     } else if (type == "LinearMotor") {
         Module::expect(arguments, 4, integer, integer, integer, integer);
         gpio_num_t move_in = (gpio_num_t)arguments[0]->evaluate_integer();

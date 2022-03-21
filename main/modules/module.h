@@ -21,6 +21,8 @@ enum ModuleType {
     roboclaw,
     roboclaw_motor,
     proxy,
+    canopen_node,
+    canopen_object_dictionary,
     number_of_module_types,
 };
 
